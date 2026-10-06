@@ -1,0 +1,11 @@
+# 原始大图（Pages / 仓库只使用 assets/ 下压缩 jpg）
+好人群友卡牌卡面/
+神人群友卡牌卡面/
+卡背/
+
+debug.log
+project.private.config.json
+.DS_Store
+Thumbs.db
+*.pyc
+__pycache__/

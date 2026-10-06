@@ -1,0 +1,134 @@
+/* 全局样式：暗色卡牌主题，贴合卡背的紫绿配色 */
+page {
+  background: #14101f;
+  color: #f0eaff;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+}
+
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 通用按钮 ---------- */
+.btn {
+  border-radius: 20rpx;
+  text-align: center;
+  box-sizing: border-box;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.btn:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+/* ---------- 卡牌（游戏页与图鉴页共用） ---------- */
+.card {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+.card-sizer {
+  position: relative;
+  width: 100%;
+  padding-top: 150%; /* 卡图 2:3 */
+}
+.card-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.36s cubic-bezier(0.3, 0.7, 0.3, 1.05);
+}
+.card.up .card-box,
+.card.matched .card-box {
+  transform: rotateY(180deg);
+}
+.card-face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: #1d1730;
+}
+.card-face image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.card-front {
+  transform: rotateY(180deg);
+}
+.card.matched .card-front {
+  box-shadow: 0 0 0 3rpx #7ddb52, 0 0 22rpx rgba(125, 219, 82, 0.7);
+}
+.card.matched.trap-match .card-front {
+  box-shadow: 0 0 0 3rpx #b47aff, 0 0 22rpx rgba(180, 122, 255, 0.7);
+}
+.card.shake {
+  animation: card-shake 0.45s ease;
+}
+.card.matched {
+  animation: card-pop 0.5s ease;
+}
+@keyframes card-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9rpx); }
+  40% { transform: translateX(9rpx); }
+  60% { transform: translateX(-6rpx); }
+  80% { transform: translateX(6rpx); }
+}
+@keyframes card-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- 计分飘字 ---------- */
+.float-score {
+  position: fixed;
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: 56rpx;
+  font-weight: 800;
+  pointer-events: none;
+  animation: float-up 0.9s ease-out forwards;
+  text-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.8);
+  z-index: 60;
+}
+.float-score.plus { color: #7ddb52; }
+.float-score.minus { color: #ff6b81; }
+.float-score.zero { color: #b8aed6; font-size: 40rpx; }
+@keyframes float-up {
+  0% { opacity: 0; margin-top: 20rpx; }
+  15% { opacity: 1; }
+  100% { opacity: 0; margin-top: -110rpx; }
+}
+
+/* ---------- 类型徽章 ---------- */
+.type-badge {
+  display: inline-block;
+  padding: 2rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  line-height: 1.6;
+}
+.type-badge.good {
+  color: #0e2413;
+  background: linear-gradient(135deg, #a5ef83, #58c945);
+}
+.type-badge.trap {
+  color: #fff;
+  background: linear-gradient(135deg, #b47aff, #7b2ff7);
+}

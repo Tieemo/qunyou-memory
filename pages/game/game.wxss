@@ -1,0 +1,213 @@
+.game-page {
+  padding: 16rpx 20rpx 20rpx;
+}
+
+/* ---------- 顶栏 ---------- */
+.hud {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 10rpx 6rpx 14rpx;
+}
+.hud-home {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #1d1730;
+  border: 1rpx solid #322654;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hud-home-icon {
+  font-size: 44rpx;
+  line-height: 1;
+  color: #b8aed6;
+  margin-top: -6rpx;
+}
+.hud-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rpx;
+}
+.hud-label {
+  font-size: 20rpx;
+  color: #8d7fb5;
+}
+.hud-value {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #f0eaff;
+}
+.hud-value.neg {
+  color: #ff6b81;
+}
+.hud-diff {
+  font-size: 26rpx;
+  color: #b47aff;
+}
+.hud-score .hud-value {
+  color: #ffd766;
+}
+.hud-score .hud-value.neg {
+  color: #ff6b81;
+}
+
+/* ---------- 反馈条 ---------- */
+.feedback {
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  padding: 12rpx 0 16rpx;
+  min-height: 40rpx;
+  color: #b8aed6;
+}
+.feedback.fb-good { color: #7ddb52; }
+.feedback.fb-trap { color: #b47aff; }
+.feedback.fb-bad { color: #ff6b81; }
+.feedback.fb-zero { color: #9c8fc0; }
+
+/* ---------- 牌阵 ---------- */
+.board-scroll {
+  flex: 1;
+  width: 100%;
+}
+.board {
+  width: 100%;
+  max-width: 700rpx;
+  margin: 0 auto;
+}
+.board-row {
+  display: flex;
+  margin: 0 -7rpx;
+}
+.board-cell {
+  flex: 1;
+  padding: 7rpx;
+  box-sizing: border-box;
+}
+.gcard {
+  cursor: pointer;
+}
+.gcard:active {
+  transform: scale(0.97);
+}
+
+/* ---------- 结束弹窗 ---------- */
+.modal-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(8, 5, 16, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.end-panel {
+  width: 620rpx;
+  max-height: 84vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 40rpx 36rpx 36rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(160deg, #241b3e, #17112a);
+  border: 1rpx solid #4a3577;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.end-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  letter-spacing: 6rpx;
+  color: #e9d5ff;
+}
+.end-score {
+  font-size: 96rpx;
+  font-weight: 900;
+  color: #ffd766;
+  line-height: 1.3;
+}
+.end-score.neg {
+  color: #ff6b81;
+}
+.end-sub {
+  font-size: 24rpx;
+  color: #9c8fc0;
+}
+.end-new {
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #7ddb52;
+  animation: end-new-blink 0.9s ease infinite alternate;
+}
+@keyframes end-new-blink {
+  from { opacity: 1; }
+  to { opacity: 0.45; }
+}
+.end-unlock-title {
+  align-self: flex-start;
+  margin-top: 28rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #b47aff;
+}
+.end-unlocks {
+  width: 100%;
+  margin-top: 14rpx;
+  white-space: nowrap;
+}
+.end-unlock-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150rpx;
+  margin-right: 16rpx;
+}
+.end-unlock-item image {
+  width: 130rpx;
+  height: 195rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 0 0 2rpx #7ddb52, 0 0 16rpx rgba(125, 219, 82, 0.5);
+}
+.end-unlock-name {
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #d9ccf5;
+  max-width: 150rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.end-unlock-empty {
+  width: 100%;
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  color: #6f639a;
+}
+.end-btns {
+  width: 100%;
+  margin-top: 34rpx;
+  display: flex;
+  gap: 16rpx;
+}
+.end-btn {
+  flex: 1;
+  padding: 20rpx 0;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #d9ccf5;
+  background: #2b2148;
+  border: 1rpx solid #4a3577;
+}
+.end-btn.primary {
+  color: #14230f;
+  background: linear-gradient(135deg, #a5ef83, #58c945);
+  border: none;
+}

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>群友卡牌 Memory</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: #14101f;
+    color: #f0eaff;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .screen {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 14px 14px 40px;
+  }
+  .screen.active { display: flex; }
+
+  .btn {
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  .btn:active { transform: scale(.96); opacity: .85; }
+
+  /* ---------- 首页 ---------- */
+  .hero { display: flex; flex-direction: column; align-items: center; margin: 18px 0 14px; }
+  .hero-cards { position: relative; width: 220px; height: 150px; margin-bottom: 6px; }
+  .hero-card {
+    position: absolute; width: 100px; height: 150px; border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.55); object-fit: cover;
+  }
+  .hc-back { left: 0; top: 6px; transform: rotate(-14deg); }
+  .hc-face { left: 60px; top: 0; z-index: 2; }
+  .hc-trap { right: 0; top: 6px; transform: rotate(14deg); }
+  .title {
+    font-size: 38px; font-weight: 900; letter-spacing: 6px;
+    background: linear-gradient(135deg, #e9d5ff, #b47aff 55%, #7ddb52);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .subtitle { margin-top: 4px; font-size: 12px; color: #9c8fc0; letter-spacing: 4px; }
+  .best-panel {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px; border-radius: 10px; margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(180,122,255,.16), rgba(125,219,82,.1));
+    border: 1px solid rgba(180,122,255,.35);
+  }
+  .best-label { font-size: 13px; color: #b8aed6; }
+  .best-score { font-size: 26px; font-weight: 800; color: #ffd766; }
+  .best-score.neg { color: #ff6b81; }
+  .section-title { font-size: 16px; font-weight: 700; color: #d9ccf5; margin-bottom: 10px; }
+  .diff-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .diff-item {
+    padding: 14px 18px; border-radius: 10px; background: #1d1730;
+    border: 1px solid #322654; display: flex; flex-direction: column; gap: 5px;
+  }
+  .diff-item:active { border-color: #b47aff; }
+  .diff-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .diff-name { font-size: 19px; font-weight: 800; }
+  .diff-desc { font-size: 12px; color: #9c8fc0; }
+  .diff-trap { font-size: 11px; color: #b47aff; }
+  .collection-btn {
+    padding: 13px 0; font-size: 17px; font-weight: 800; letter-spacing: 8px;
+    color: #14230f; background: linear-gradient(135deg, #a5ef83, #58c945);
+    box-shadow: 0 5px 14px rgba(125,219,82,.35); margin-bottom: 24px;
+  }
+  .rules { padding: 14px 16px; border-radius: 10px; background: rgba(29,23,48,.7); border: 1px dashed #3d2f63; }
+  .rules-title { font-size: 13px; font-weight: 700; color: #b47aff; margin-bottom: 8px; }
+  .rule-line { font-size: 11.5px; color: #9c8fc0; line-height: 1.8; }
+
+  /* ---------- 游戏页 HUD ---------- */
+  .hud { display: flex; align-items: center; gap: 6px; padding: 4px 2px 10px; }
+  .hud-home {
+    width: 30px; height: 30px; border-radius: 50%; background: #1d1730;
+    border: 1px solid #322654; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; line-height: 1; color: #b8aed6; cursor: pointer; user-select: none;
+  }
+  .hud-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .hud-label { font-size: 10px; color: #8d7fb5; }
+  .hud-value { font-size: 17px; font-weight: 800; }
+  .hud-diff { font-size: 14px; color: #b47aff; }
+  .hud-score .hud-value { color: #ffd766; }
+  .neg { color: #ff6b81 !important; }
+  .feedback { text-align: center; font-weight: 700; padding: 6px 0 12px; min-height: 22px; color: #b8aed6; }
+  .fb-good { color: #7ddb52; }
+  .fb-trap { color: #b47aff; }
+  .fb-bad { color: #ff6b81; }
+  .fb-zero { color: #9c8fc0; }
+
+  /* ---------- 牌阵 ---------- */
+  #board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+  .card { position: relative; cursor: pointer; user-select: none; }
+  .card:active { transform: scale(.97); }
+  .card-sizer { position: relative; width: 100%; padding-top: 150%; }
+  .card-box {
+    position: absolute; inset: 0; transform-style: preserve-3d;
+    transition: transform .36s cubic-bezier(.3,.7,.3,1.05);
+  }
+  .card.up .card-box, .card.matched .card-box { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; inset: 0; border-radius: 7px; overflow: hidden;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden; background: #1d1730;
+  }
+  .card-face img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .card-front { transform: rotateY(180deg); }
+  .card.matched .card-front { box-shadow: 0 0 0 2px #7ddb52, 0 0 14px rgba(125,219,82,.7); }
+  .card.matched.trap .card-front { box-shadow: 0 0 0 2px #b47aff, 0 0 14px rgba(180,122,255,.7); }
+  .card.shake { animation: shake .45s ease; }
+  .card.matched { animation: pop .5s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-5px); } 40% { transform: translateX(5px); }
+    60% { transform: translateX(-4px); } 80% { transform: translateX(4px); }
+  }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+  /* ---------- 飘字 ---------- */
+  #float-layer { position: fixed; left: 0; right: 0; top: 26%; pointer-events: none; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .float { font-size: 30px; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,.8); animation: float-up .9s ease-out forwards; }
+  .float.plus { color: #7ddb52; }
+  .float.minus { color: #ff6b81; }
+  .float.zero { color: #b8aed6; font-size: 22px; }
+  @keyframes float-up {
+    0% { opacity: 0; transform: translateY(10px); }
+    15% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-70px); }
+  }
+
+  /* ---------- 结束弹窗 ---------- */
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(8,5,16,.82);
+    display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  .end-panel {
+    width: 100%; max-width: 420px; max-height: 84vh; overflow-y: auto;
+    box-sizing: border-box; padding: 26px 22px 24px; border-radius: 16px;
+    background: linear-gradient(160deg, #241b3e, #17112a);
+    border: 1px solid #4a3577; display: flex; flex-direction: column; align-items: center;
+  }
+  .end-title { font-size: 24px; font-weight: 900; letter-spacing: 4px; color: #e9d5ff; }
+  .end-score { font-size: 58px; font-weight: 900; color: #ffd766; line-height: 1.3; }
+  .end-sub { font-size: 12px; color: #9c8fc0; }
+  .end-new { margin-top: 6px; font-size: 14px; font-weight: 800; color: #7ddb52; animation: blink .9s ease infinite alternate; }
+  @keyframes blink { from { opacity: 1; } to { opacity: .45; } }
+  .end-unlock-title { align-self: flex-start; margin-top: 18px; font-size: 13px; font-weight: 700; color: #b47aff; }
+  .end-unlocks { display: flex; gap: 10px; overflow-x: auto; width: 100%; margin-top: 8px; padding-bottom: 4px; }
+  .end-unlock-item { display: flex; flex-direction: column; align-items: center; width: 76px; flex-shrink: 0; }
+  .end-unlock-item img {
+    width: 66px; height: 99px; border-radius: 6px;
+    box-shadow: 0 0 0 2px #7ddb52, 0 0 10px rgba(125,219,82,.5);
+  }
+  .end-unlock-name { margin-top: 4px; font-size: 10px; color: #d9ccf5; max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .end-unlock-empty { width: 100%; margin-top: 8px; font-size: 12px; color: #6f639a; }
+  .end-btns { width: 100%; margin-top: 22px; display: flex; gap: 10px; }
+  .end-btn { flex: 1; padding: 11px 0; font-size: 13px; font-weight: 700; color: #d9ccf5; background: #2b2148; border: 1px solid #4a3577; }
+  .end-btn.primary { color: #14230f; background: linear-gradient(135deg, #a5ef83, #58c945); border: none; }
+
+  /* ---------- 图鉴页 ---------- */
+  .col-header { padding: 8px 4px 14px; border-bottom: 1px solid #2b2148; margin-bottom: 14px; }
+  .col-header-row { display: flex; align-items: flex-start; gap: 10px; }
+  .col-progress-wrap { display: flex; align-items: baseline; gap: 6px; flex: 1; }
+  .col-progress-num { font-size: 36px; font-weight: 900; color: #ffd766; }
+  .col-progress-total { font-size: 17px; color: #8d7fb5; }
+  .col-progress-label { margin-left: 10px; font-size: 12px; color: #9c8fc0; }
+  .col-tip { margin-top: 6px; font-size: 11px; color: #6f639a; line-height: 1.7; }
+  .col-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .col-item { display: flex; flex-direction: column; align-items: center; }
+  .col-back.locked img { opacity: .4; }
+  .qmask { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .qmark {
+    width: 34px; height: 34px; border-radius: 50%; background: rgba(20,16,31,.85);
+    border: 1.5px solid #b47aff; color: #b47aff; font-size: 20px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .col-name { margin-top: 6px; font-size: 11px; color: #d9ccf5; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .type-badge {
+    display: inline-block; margin-top: 3px; padding: 1px 8px; border-radius: 99px; font-size: 10px; line-height: 1.6;
+  }
+  .type-badge.good { color: #0e2413; background: linear-gradient(135deg, #a5ef83, #58c945); }
+  .type-badge.trap { color: #fff; background: linear-gradient(135deg, #b47aff, #7b2ff7); }
+</style>
+</head>
+<body>
+
+<!-- ================= 首页 ================= -->
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <div class="hero-cards">
+      <img class="hero-card hc-back" id="hero-back" alt="">
+      <img class="hero-card hc-face" id="hero-face" alt="">
+      <img class="hero-card hc-trap" id="hero-trap" alt="">
+    </div>
+    <div class="title">群友卡牌</div>
+    <div class="subtitle">MEMORY · 变体记忆翻牌</div>
+  </div>
+
+  <div class="best-panel">
+    <span class="best-label">历史最高分</span>
+    <span class="best-score" id="home-best">--</span>
+  </div>
+
+  <div class="section-title">选择难度</div>
+  <div class="diff-list" id="diff-list"></div>
+
+  <div class="btn collection-btn" id="btn-open-collection">图 鉴</div>
+
+  <div class="rules">
+    <div class="rules-title">玩法规则</div>
+    <div class="rule-line">每回合翻 2 张牌：相同好人 +1 留场；相同神人 0 分留场</div>
+    <div class="rule-line">不同好人 0 分盖回；好人 + 神人 -1 盖回；不同神人 -2 盖回</div>
+    <div class="rule-line">翻到某卡第一张后，自己 3 回合内翻到第二张配对成功 → 解锁该卡图鉴（好人、神人皆可解锁）</div>
+    <div class="rule-line">全部卡配对完游戏结束，展示总分 + 已解锁图鉴，分数可为负</div>
+  </div>
+</div>
+
+<!-- ================= 游戏页 ================= -->
+<div class="screen" id="screen-game">
+  <div class="hud">
+    <div class="hud-home" id="btn-home">‹</div>
+    <div class="hud-stat"><span class="hud-label">难度</span><span class="hud-value hud-diff" id="hud-diff">标准</span></div>
+    <div class="hud-stat"><span class="hud-label">回合</span><span class="hud-value" id="hud-turn">0</span></div>
+    <div class="hud-stat hud-score"><span class="hud-label">分数</span><span class="hud-value" id="hud-score">0</span></div>
+    <div class="hud-stat"><span class="hud-label">配对</span><span class="hud-value" id="hud-matched">0/0</span></div>
+  </div>
+
+  <div class="feedback" id="feedback">翻开两张牌，开始游戏</div>
+  <div id="board"></div>
+
+  <div id="float-layer"></div>
+
+  <div class="modal-mask" id="end-modal" style="display:none">
+    <div class="end-panel">
+      <div class="end-title">游戏结束</div>
+      <div class="end-score" id="end-score">0</div>
+      <div class="end-sub" id="end-sub"></div>
+      <div class="end-new" id="end-new" style="display:none">★ 新纪录 ★</div>
+      <div class="end-unlock-title">本局解锁</div>
+      <div class="end-unlocks" id="end-unlocks"></div>
+      <div class="end-unlock-empty" id="end-unlocks-empty" style="display:none">本局没有新解锁，再试试看！</div>
+      <div class="end-btns">
+        <div class="btn end-btn primary" id="btn-restart">再来一局</div>
+        <div class="btn end-btn" id="btn-end-collection">查看图鉴</div>
+        <div class="btn end-btn" id="btn-end-home">返回首页</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 图鉴页 ================= -->
+<div class="screen" id="screen-collection">
+  <div class="col-header">
+    <div class="col-header-row">
+      <div class="hud-home" id="btn-col-home" title="返回首页">‹</div>
+      <div class="col-progress-wrap">
+        <span class="col-progress-num" id="col-count">0</span>
+        <span class="col-progress-total" id="col-total">/ 0</span>
+        <span class="col-progress-label">已解锁</span>
+      </div>
+    </div>
+    <div class="col-tip">翻到某卡第一张后，自己 3 回合内配对成功即可解锁（好人、神人均可解锁）</div>
+  </div>
+  <div class="col-grid" id="col-grid"></div>
+</div>
+
+<script>
+window.__web_modules = window.__web_modules || {};
+window.__web_modules["config/cards.js"] = (function () {
+  var module = { exports: {} };
+  var exports = module.exports;
+  var require = function (p) { return window.__web_modules[{}[p]]; };
+// 卡池配置：文件名（不含扩展名）即卡牌 ID，新增卡只需把图片放进对应目录并在下列数组加名字。
+// 原始大图在 好人群友卡牌卡面/ 神人群友卡牌卡面/ 卡背/，由 tools/compress_assets.py 压缩生成 assets/ 下的 jpg。
+const BACK_IMG = '/assets/back.jpg';
+
+const FACE_CARDS = [
+  'Franny',
+  'wada大王',
+  '一只鱼傻了吧唧',
+  '中药',
+  '冰糖',
+  '土豆',
+  '在羽',
+  '墨海波澜一笔生',
+  '好吉咪',
+  '妖妖',
+  '小楼一夜恨春雨',
+  '年',
+  '张螂',
+  '悦瑛',
+  '橙子',
+  '白写',
+  '耶耶',
+  '谢清玄',
+  '超级无敌大S派',
+  '雲',
+  '鸩',
+  '鹅',
+  '🍐',
+];
+
+const TRAP_CARDS = [
+  'Freeze',
+  'Q群管理',
+  'duoduo&史迪奇',
+  'wxl',
+  '判刑管子',
+  '悦',
+  '熊哥',
+  '猫哥',
+  '玩动',
+];
+
+module.exports = {
+  BACK_IMG,
+  FACE_CARDS,
+  TRAP_CARDS,
+};
+
+  return module.exports;
+})();
+window.__web_modules = window.__web_modules || {};
+window.__web_modules["config/config.js"] = (function () {
+  var module = { exports: {} };
+  var exports = module.exports;
+  var require = function (p) { return window.__web_modules[{"./cards": "config/cards.js"}[p]]; };
+// 全局配置：卡池(cards.js 自动生成) + 计分规则常量 + 难度
+// 注意：计分规则与图鉴判定窗口为固定规则，禁止改动。
+const cards = require('./cards');
+
+// ---------- 计分规则（规则表，禁止改动） ----------
+const SCORE = {
+  GOOD_PAIR: 1, // 相同好人卡 → 留在场上明牌，+1分
+  TRAP_PAIR: 0, // 相同神人卡 → 留在场上明牌，0分
+  GOOD_MISS: 0, // 不同好人卡 → 盖回，0分
+  MIXED_MISS: -1, // 好人+神人 → 盖回，-1分
+  TRAP_MISS: -2, // 不同神人卡 → 盖回，-2分
+};
+
+// ---------- 图鉴判定（禁止改动） ----------
+// 翻到某卡第一张后，自己 UNLOCK_WINDOW 个回合内翻到第二张配对成功 → 解锁
+const UNLOCK_WINDOW = 3;
+
+// ---------- 难度（卡池大小） ----------
+const DIFFICULTY = {
+  easy: {
+    key: 'easy',
+    name: '简单',
+    pairs: 8, // 4×4
+    trapRatio: 0.25,
+    desc: '4×4 牌阵 · 8 对',
+  },
+  normal: {
+    key: 'normal',
+    name: '标准',
+    pairs: 10, // 4×5
+    trapRatio: 0.35,
+    desc: '4×5 牌阵 · 10 对',
+  },
+  hard: {
+    key: 'hard',
+    name: '困难',
+    pairs: 12, // 4×6
+    trapRatio: 0.45,
+    desc: '4×6 牌阵 · 12 对',
+  },
+};
+const DEFAULT_DIFFICULTY = 'normal';
+
+function getDifficulty(key) {
+  return DIFFICULTY[key] || DIFFICULTY[DEFAULT_DIFFICULTY];
+}
+
+// ---------- 图片路径（包内相对路径，禁止写死绝对路径） ----------
+function faceImg(id) {
+  return '/assets/face/' + id + '.jpg';
+}
+function trapImg(id) {
+  return '/assets/trap/' + id + '.jpg';
+}
+function cardImg(id, type) {
+  return type === 'trap' ? trapImg(id) : faceImg(id);
+}
+
+module.exports = {
+  // 卡池
+  BACK_IMG: cards.BACK_IMG,
+  FACE_CARDS: cards.FACE_CARDS,
+  TRAP_CARDS: cards.TRAP_CARDS,
+  // 规则
+  SCORE,
+  UNLOCK_WINDOW,
+  // 难度
+  DIFFICULTY,
+  DEFAULT_DIFFICULTY,
+  getDifficulty,
+  // 路径
+  faceImg,
+  trapImg,
+  cardImg,
+};
+
+  return module.exports;
+})();
+window.__web_modules = window.__web_modules || {};
+window.__web_modules["utils/game.js"] = (function () {
+  var module = { exports: {} };
+  var exports = module.exports;
+  var require = function (p) { return window.__web_modules[{"../config/config": "config/config.js"}[p]]; };
+// 游戏纯逻辑核心：不依赖 wx，可在 Node/QuickJS 中仿真测试。
+// 规则（固定，禁止改动）：
+//   相同好人 +1 留场 / 相同神人 0 留场 / 不同好人 0 盖回 / 好神混杂 -1 盖回 / 不同神人 -2 盖回
+//   图鉴：翻到某卡第一张后 UNLOCK_WINDOW 个回合内配对成功 → 解锁
+const { SCORE, UNLOCK_WINDOW, FACE_CARDS, TRAP_CARDS, getDifficulty } = require('../config/config');
+
+function shuffle(arr, rng) {
+  const r = rng || Math.random;
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1));
+    const t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
+  }
+  return arr;
+}
+
+// 两张牌结算（规则表）
+function evaluatePair(a, b) {
+  if (a.id === b.id) {
+    return a.type === 'good'
+      ? { match: true, delta: SCORE.GOOD_PAIR }
+      : { match: true, delta: SCORE.TRAP_PAIR };
+  }
+  if (a.type !== b.type) return { match: false, delta: SCORE.MIXED_MISS };
+  return a.type === 'good'
+    ? { match: false, delta: SCORE.GOOD_MISS }
+    : { match: false, delta: SCORE.TRAP_MISS };
+}
+
+// 按难度从卡池抽样出若干对（神人占比随难度提升）
+function samplePairs(diffKey, rng) {
+  const d = getDifficulty(diffKey);
+  const r = rng || Math.random;
+  const trapCount = Math.min(
+    TRAP_CARDS.length,
+    Math.max(1, Math.round(d.pairs * d.trapRatio))
+  );
+  const faces = shuffle(FACE_CARDS.slice(), r).slice(0, d.pairs - trapCount);
+  const traps = shuffle(TRAP_CARDS.slice(), r).slice(0, trapCount);
+  return traps.map(function (id) { return { id: id, type: 'trap' }; })
+    .concat(faces.map(function (id) { return { id: id, type: 'good' }; }));
+}
+
+// 创建一局游戏。
+// opts:
+//   pairs: [{id, type}] 对子列表（与 deck 二选一）
+//   deck : [{id, type}] 已展开的牌堆（每张出现两次，顺序即牌面顺序；测试用，不走洗牌）
+//   rng  : 随机源
+function createGame(opts) {
+  opts = opts || {};
+  const rng = opts.rng || Math.random;
+  let deck;
+  if (opts.deck) {
+    deck = opts.deck.slice();
+  } else {
+    deck = [];
+    (opts.pairs || []).forEach(function (p) {
+      deck.push({ id: p.id, type: p.type });
+      deck.push({ id: p.id, type: p.type });
+    });
+    shuffle(deck, rng);
+  }
+
+  const cards = deck.map(function (c, i) {
+    return { key: i, id: c.id, type: c.type, state: 'down' };
+  });
+
+  const state = {
+    cards: cards,
+    turn: 0, // 已完成回合数（每回合翻 2 张）
+    score: 0,
+    matchedPairs: 0,
+    totalPairs: cards.length / 2,
+    firstRevealTurn: {}, // 卡 id -> 本局首次翻到它的回合
+    unlockedThisGame: [], // 本局满足“3回合内”判定的新解锁卡 id
+    flippedKeys: [], // 当前回合已翻开的 key
+    over: false,
+  };
+
+  function currentTurn() {
+    return state.turn + 1;
+  }
+
+  function canFlip(key) {
+    const c = cards[key];
+    return !!c && c.state === 'down' && state.flippedKeys.length < 2 && !state.over;
+  }
+
+  // 翻牌。返回值：
+  //   { kind: 'flip', card }                       翻开第一张，回合未结束
+  //   { kind: 'turn', turn, a, b, match, delta, score, unlockId, over, pairType }
+  //                                                翻开第二张，本回合已结算
+  //   null                                         该牌不可翻
+  function flip(key) {
+    if (!canFlip(key)) return null;
+    const c = cards[key];
+    c.state = 'up';
+    if (state.firstRevealTurn[c.id] === undefined) {
+      state.firstRevealTurn[c.id] = currentTurn();
+    }
+    state.flippedKeys.push(c.key);
+
+    if (state.flippedKeys.length < 2) {
+      return { kind: 'flip', card: c };
+    }
+
+    // 第二张落下：本回合结算
+    state.turn = currentTurn();
+    const a = cards[state.flippedKeys[0]];
+    const b = c;
+    const ev = evaluatePair(a, b);
+
+    let unlockId = null;
+    if (ev.match) {
+      a.state = 'matched';
+      b.state = 'matched';
+      state.matchedPairs += 1;
+      const t0 = state.firstRevealTurn[a.id];
+      if (t0 !== undefined && state.turn - t0 <= UNLOCK_WINDOW) {
+        unlockId = a.id;
+        if (state.unlockedThisGame.indexOf(a.id) === -1) {
+          state.unlockedThisGame.push(a.id);
+        }
+      }
+      if (state.matchedPairs >= state.totalPairs) state.over = true;
+    } else {
+      a.state = 'down';
+      b.state = 'down';
+    }
+    state.score += ev.delta;
+    state.flippedKeys = [];
+
+    return {
+      kind: 'turn',
+      turn: state.turn,
+      a: a,
+      b: b,
+      match: ev.match,
+      delta: ev.delta,
+      score: state.score,
+      unlockId: unlockId,
+      over: state.over,
+      pairType: a.id === b.id ? a.type : null,
+    };
+  }
+
+  return {
+    state: state,
+    flip: flip,
+    canFlip: canFlip,
+    evaluatePair: evaluatePair,
+  };
+}
+
+module.exports = {
+  shuffle: shuffle,
+  evaluatePair: evaluatePair,
+  samplePairs: samplePairs,
+  createGame: createGame,
+  UNLOCK_WINDOW: UNLOCK_WINDOW,
+};
+
+  return module.exports;
+})();
+window.Cards = window.__web_modules['config/cards.js'];
+window.Config = window.__web_modules['config/config.js'];
+window.GameCore = window.__web_modules['utils/game.js'];
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var Config = window.Config;
+  var Core = window.GameCore;
+  // 站点根相对路径：'/assets/face/🍐.jpg' → 'assets/face/%F0%9F%8D%90.jpg'
+  // 分段 encode，避免 &、中文、emoji 在 Gitee Pages 上裂图；不要用绝对 /assets（子路径仓库会指到域名根）。
+  function img(p) {
+    return String(p || '').replace(/^\//, '').split('/').map(encodeURIComponent).join('/');
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  }
+
+  /* ---------- 本地存储（与小程序同 key） ---------- */
+  var MEM = {};
+  var LS = (function () {
+    try { localStorage.setItem('__qy_t', '1'); localStorage.removeItem('__qy_t'); return localStorage; }
+    catch (e) { return null; }
+  })();
+  function readKey(key, fallback) {
+    if (LS) {
+      var v = LS.getItem(key);
+      return v === null ? fallback : JSON.parse(v);
+    }
+    return MEM[key] !== undefined ? MEM[key] : fallback;
+  }
+  function writeKey(key, val) {
+    if (LS) LS.setItem(key, JSON.stringify(val));
+    else MEM[key] = val;
+  }
+  var Store = {
+    KEY_UNLOCK: 'qy_unlock_v1',
+    KEY_BEST: 'qy_best_v1',
+    getUnlocks: function () {
+      var v = readKey(this.KEY_UNLOCK, {});
+      return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+    },
+    unlockCard: function (id) {
+      var u = this.getUnlocks();
+      if (u[id]) return false;
+      u[id] = Date.now();
+      writeKey(this.KEY_UNLOCK, u);
+      return true;
+    },
+    getBest: function () {
+      var v = readKey(this.KEY_BEST, null);
+      return (typeof v === 'number' && !isNaN(v)) ? v : null;
+    },
+    saveBest: function (score) {
+      var prev = this.getBest();
+      if (prev === null || score > prev) {
+        writeKey(this.KEY_BEST, score);
+        return { best: score, isNew: true };
+      }
+      return { best: prev, isNew: false };
+    }
+  };
+
+  /* ---------- 界面切换 ---------- */
+  function showScreen(name) {
+    var ids = { home: 'screen-home', game: 'screen-game', collection: 'screen-collection' };
+    Object.keys(ids).forEach(function (k) {
+      document.getElementById(ids[k]).classList.toggle('active', k === name);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- 首页 ---------- */
+  function renderHome() {
+    document.getElementById('hero-back').src = img(Config.BACK_IMG);
+    document.getElementById('hero-face').src = img(Config.faceImg(Config.FACE_CARDS[0]));
+    document.getElementById('hero-trap').src = img(Config.trapImg(Config.TRAP_CARDS[0]));
+    var best = Store.getBest();
+    var el = document.getElementById('home-best');
+    el.textContent = best === null ? '--' : best;
+    el.classList.toggle('neg', best !== null && best < 0);
+
+    var list = document.getElementById('diff-list');
+    list.innerHTML = '';
+    Object.keys(Config.DIFFICULTY).forEach(function (key) {
+      var d = Config.DIFFICULTY[key];
+      var item = document.createElement('div');
+      item.className = 'diff-item btn';
+      item.innerHTML =
+        '<div class="diff-head"><span class="diff-name">' + d.name + '</span>' +
+        '<span class="diff-desc">' + d.desc + '</span></div>' +
+        '<div class="diff-trap">神人占比约 ' + Math.round(d.trapRatio * 100) + '%</div>';
+      item.addEventListener('click', function () { startGame(key); });
+      list.appendChild(item);
+    });
+  }
+
+  /* ---------- 游戏页 ---------- */
+  var COLS = 4;
+  var core = null, diffKey = Config.DEFAULT_DIFFICULTY, locked = false, combo = 0;
+  var newUnlocks = [], timers = [];
+
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+  function feedbackOf(res) {
+    if (res.match) {
+      if (res.pairType === 'good') {
+        return { text: combo >= 2 ? '好人配对 连击×' + combo + '  +1' : '好人配对  +1', cls: 'fb-good' };
+      }
+      return { text: '神人现身  0（留场）', cls: 'fb-trap' };
+    }
+    if (res.pairType === null) return { text: '好神混杂  -1', cls: 'fb-bad' };
+    return res.pairType === 'good' ? { text: '好人错过  0', cls: 'fb-zero' } : { text: '神人相冲  -2', cls: 'fb-bad' };
+  }
+
+  function startGame(key) {
+    diffKey = key;
+    startRound();
+    showScreen('game');
+  }
+
+  function startRound() {
+    clearTimers();
+    var d = Config.getDifficulty(diffKey);
+    document.getElementById('hud-diff').textContent = d.name;
+    var pairs = Core.samplePairs(diffKey);
+    core = Core.createGame({ pairs: pairs });
+    newUnlocks = []; combo = 0; locked = false;
+    document.getElementById('end-modal').style.display = 'none';
+    renderBoard();
+    setFeedback('翻开两张牌，开始游戏', '');
+    updateHud();
+  }
+
+  function renderBoard() {
+    var board = document.getElementById('board');
+    board.innerHTML = '';
+    board.style.gridTemplateColumns = 'repeat(' + COLS + ', 1fr)';
+    core.state.cards.forEach(function (c) {
+      var el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.key = c.key;
+      el.innerHTML =
+        '<div class="card-sizer"><div class="card-box">' +
+        '<div class="card-face"><img src="' + img(Config.BACK_IMG) + '" draggable="false" alt=""></div>' +
+        '<div class="card-face card-front"><img src="' + img(Config.cardImg(c.id, c.type)) + '" draggable="false" alt=""></div>' +
+        '</div></div>';
+      el.addEventListener('click', onCardClick);
+      board.appendChild(el);
+    });
+  }
+
+  function cardEl(key) { return document.querySelector('#board .card[data-key="' + key + '"]'); }
+
+  function setFeedback(text, cls) {
+    var el = document.getElementById('feedback');
+    el.textContent = text;
+    el.className = 'feedback ' + (cls || '');
+  }
+
+  function updateHud() {
+    document.getElementById('hud-turn').textContent = core.state.turn;
+    var s = document.getElementById('hud-score');
+    s.textContent = core.state.score;
+    s.classList.toggle('neg', core.state.score < 0);
+    document.getElementById('hud-matched').textContent = core.state.matchedPairs + '/' + core.state.totalPairs;
+  }
+
+  function pushFloat(delta) {
+    var el = document.createElement('div');
+    el.className = 'float ' + (delta > 0 ? 'plus' : delta < 0 ? 'minus' : 'zero');
+    el.textContent = delta > 0 ? '+' + delta : String(delta);
+    document.getElementById('float-layer').appendChild(el);
+    setTimeout(function () { el.remove(); }, 900);
+  }
+
+  function vibrate() { if (navigator.vibrate) { try { navigator.vibrate(80); } catch (e) {} } }
+
+  function onCardClick(e) {
+    if (locked || !core) return;
+    var key = Number(e.currentTarget.dataset.key);
+    var res = core.flip(key);
+    if (!res) return;
+    cardEl(key).classList.add('up');
+    if (res.kind === 'flip') return;
+
+    locked = true;
+    combo = (res.match && res.pairType === 'good') ? combo + 1 : 0;
+    var fb = feedbackOf(res);
+    setFeedback(fb.text, fb.cls);
+    pushFloat(res.delta);
+    if (res.delta < 0) vibrate();
+    updateHud();
+
+    var ka = res.a.key, kb = res.b.key;
+    if (res.match) {
+      later(function () {
+        var ea = cardEl(ka), eb = cardEl(kb);
+        ea.classList.add('matched'); eb.classList.add('matched');
+        if (res.pairType === 'trap') { ea.classList.add('trap'); eb.classList.add('trap'); }
+        if (res.unlockId && Store.unlockCard(res.unlockId)) newUnlocks.push(res.unlockId);
+        if (res.over) later(showEnd, 700);
+        else locked = false;
+      }, 480);
+    } else {
+      cardEl(ka).classList.add('shake');
+      cardEl(kb).classList.add('shake');
+      later(function () {
+        [ka, kb].forEach(function (k) {
+          var el = cardEl(k);
+          if (el) el.classList.remove('up', 'shake');
+        });
+        locked = false;
+      }, 720);
+    }
+  }
+
+  function showEnd() {
+    var score = core.state.score;
+    var bestRes = Store.saveBest(score);
+    var unlocks = Store.getUnlocks();
+    var total = Config.FACE_CARDS.length + Config.TRAP_CARDS.length;
+
+    document.getElementById('end-score').textContent = score;
+    document.getElementById('end-score').classList.toggle('neg', score < 0);
+    document.getElementById('end-sub').textContent =
+      '共 ' + core.state.turn + ' 回合 · 图鉴 ' + Object.keys(unlocks).length + '/' + total;
+    document.getElementById('end-new').style.display = bestRes.isNew ? 'block' : 'none';
+
+    var box = document.getElementById('end-unlocks');
+    box.innerHTML = '';
+    document.getElementById('end-unlocks-empty').style.display = newUnlocks.length ? 'none' : 'block';
+    newUnlocks.forEach(function (id) {
+      var type = Config.TRAP_CARDS.indexOf(id) >= 0 ? 'trap' : 'good';
+      var item = document.createElement('div');
+      item.className = 'end-unlock-item';
+      item.innerHTML = '<img src="' + img(Config.cardImg(id, type)) + '" alt=""><span class="end-unlock-name">' + esc(id) + '</span>';
+      box.appendChild(item);
+    });
+    document.getElementById('end-modal').style.display = 'flex';
+  }
+
+  /* ---------- 图鉴页 ---------- */
+  function renderCollection() {
+    var unlocks = Store.getUnlocks();
+    var grid = document.getElementById('col-grid');
+    grid.innerHTML = '';
+    var count = 0;
+    function addItem(id, type) {
+      var unlocked = !!unlocks[id];
+      if (unlocked) count++;
+      var el = document.createElement('div');
+      el.className = 'col-item';
+      el.innerHTML =
+        '<div class="card">' +
+        '<div class="card-sizer"><div class="card-box">' +
+        '<div class="card-face col-back' + (unlocked ? '' : ' locked') + '">' +
+        '<img src="' + img(Config.BACK_IMG) + '" draggable="false" alt="">' +
+        (unlocked ? '' : '<div class="qmask"><span class="qmark">?</span></div>') +
+        '</div>' +
+        '<div class="card-face card-front"><img src="' + img(Config.cardImg(id, type)) + '" draggable="false" alt=""></div>' +
+        '</div></div></div>' +
+        '<div class="col-name">' + (unlocked ? esc(id) : '???') + '</div>' +
+        '<span class="type-badge ' + type + '">' + (type === 'good' ? '好人' : '神人') + '</span>';
+      grid.appendChild(el);
+    }
+    Config.FACE_CARDS.forEach(function (id) { addItem(id, 'good'); });
+    Config.TRAP_CARDS.forEach(function (id) { addItem(id, 'trap'); });
+    document.getElementById('col-count').textContent = count;
+    document.getElementById('col-total').textContent = '/ ' + (Config.FACE_CARDS.length + Config.TRAP_CARDS.length);
+  }
+
+  /* ---------- 事件绑定 ---------- */
+  document.getElementById('btn-home').addEventListener('click', function () { showScreen('home'); renderHome(); });
+  document.getElementById('btn-col-home').addEventListener('click', function () { showScreen('home'); renderHome(); });
+  document.getElementById('btn-open-collection').addEventListener('click', function () { renderCollection(); showScreen('collection'); });
+  document.getElementById('btn-end-home').addEventListener('click', function () { showScreen('home'); renderHome(); });
+  document.getElementById('btn-end-collection').addEventListener('click', function () { renderCollection(); showScreen('collection'); });
+  document.getElementById('btn-restart').addEventListener('click', startRound);
+
+  renderHome();
+
+  /* 测试钩子（无害） */
+  window.__QY = {
+    get core() { return core; },
+    Config: Config, Core: Core, Store: Store,
+    startGame: startGame, startRound: startRound,
+    showScreen: showScreen, renderCollection: renderCollection
+  };
+})();
+</script>
+</body>
+</html>

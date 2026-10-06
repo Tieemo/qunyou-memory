@@ -1,0 +1,9 @@
+{
+  "desc": "群友卡牌 Memory：默认允许所有页面索引",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

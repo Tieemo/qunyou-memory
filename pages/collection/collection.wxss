@@ -1,0 +1,96 @@
+.col-page {
+  padding: 20rpx 24rpx 30rpx;
+}
+
+/* ---------- 头部 ---------- */
+.col-header {
+  padding: 14rpx 10rpx 20rpx;
+  border-bottom: 1rpx solid #2b2148;
+  margin-bottom: 20rpx;
+}
+.col-progress-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+}
+.col-progress-num {
+  font-size: 64rpx;
+  font-weight: 900;
+  color: #ffd766;
+}
+.col-progress-total {
+  font-size: 32rpx;
+  color: #8d7fb5;
+}
+.col-progress-label {
+  margin-left: 14rpx;
+  font-size: 24rpx;
+  color: #9c8fc0;
+}
+.col-tip {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #6f639a;
+  line-height: 1.7;
+}
+
+/* ---------- 卡牌网格 ---------- */
+.col-scroll {
+  flex: 1;
+  width: 100%;
+}
+.col-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -9rpx;
+}
+.col-item {
+  width: 33.33%;
+  box-sizing: border-box;
+  padding: 9rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14rpx;
+}
+.col-back.locked image {
+  opacity: 0.4;
+}
+.col-back.locked {
+  background: #0d0a16;
+}
+.qmask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qmark {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(20, 16, 31, 0.85);
+  border: 2rpx solid #b47aff;
+  color: #b47aff;
+  font-size: 40rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.col-name {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #d9ccf5;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.type-badge {
+  margin-top: 6rpx;
+}

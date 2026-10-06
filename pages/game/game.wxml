@@ -1,0 +1,74 @@
+<view class="page game-page">
+  <view class="hud">
+    <view class="hud-home" bindtap="onBackHome">
+      <text class="hud-home-icon">‹</text>
+    </view>
+    <view class="hud-stat">
+      <text class="hud-label">难度</text>
+      <text class="hud-value hud-diff">{{diffName}}</text>
+    </view>
+    <view class="hud-stat">
+      <text class="hud-label">回合</text>
+      <text class="hud-value">{{turn}}</text>
+    </view>
+    <view class="hud-stat hud-score">
+      <text class="hud-label">分数</text>
+      <text class="hud-value {{score < 0 ? 'neg' : ''}}">{{score}}</text>
+    </view>
+    <view class="hud-stat">
+      <text class="hud-label">配对</text>
+      <text class="hud-value">{{matchedPairs}}/{{totalPairs}}</text>
+    </view>
+  </view>
+
+  <view class="feedback {{feedbackCls}}">{{feedback}}</view>
+
+  <scroll-view class="board-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="board">
+      <view class="board-row" wx:for="{{rows}}" wx:for-item="row" wx:key="index">
+        <view class="board-cell" wx:for="{{row}}" wx:for-item="card" wx:key="key">
+          <view class="card gcard {{upMap[card.key] ? 'up' : ''}} {{matchedMap[card.key] ? 'matched' : ''}} {{matchedMap[card.key] && card.type === 'trap' ? 'trap-match' : ''}} {{shakeMap[card.key] ? 'shake' : ''}}" data-key="{{card.key}}" bindtap="onCardTap">
+            <view class="card-sizer">
+              <view class="card-box">
+                <view class="card-face">
+                  <image src="{{backImg}}" mode="aspectFill" lazy-load="{{true}}" />
+                </view>
+                <view class="card-face card-front">
+                  <image src="{{card.img}}" mode="aspectFill" lazy-load="{{true}}" />
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="float-layer">
+    <view wx:for="{{floats}}" wx:key="key" class="float-score {{item.cls}}">{{item.text}}</view>
+  </view>
+
+  <view class="modal-mask" wx:if="{{showEnd}}">
+    <view class="end-panel">
+      <view class="end-title">游戏结束</view>
+      <view class="end-score {{endScore < 0 ? 'neg' : ''}}">{{endScore}}</view>
+      <view class="end-sub">共 {{endTurns}} 回合 · 图鉴 {{endUnlockTotal}}/{{endTotalCards}}</view>
+      <view class="end-new" wx:if="{{endIsNew}}">★ 新纪录 ★</view>
+
+      <view class="end-unlock-title">本局解锁</view>
+      <scroll-view class="end-unlocks" scroll-x enhanced show-scrollbar="{{false}}" wx:if="{{endUnlocks.length > 0}}">
+        <view class="end-unlock-item" wx:for="{{endUnlocks}}" wx:key="id">
+          <image src="{{item.img}}" mode="aspectFill" />
+          <text class="end-unlock-name">{{item.id}}</text>
+        </view>
+      </scroll-view>
+      <view class="end-unlock-empty" wx:else>本局没有新解锁，再试试看！</view>
+
+      <view class="end-btns">
+        <view class="btn end-btn primary" bindtap="onRestart">再来一局</view>
+        <view class="btn end-btn" bindtap="onOpenCollection">查看图鉴</view>
+        <view class="btn end-btn" bindtap="onBackHome">返回首页</view>
+      </view>
+    </view>
+  </view>
+</view>

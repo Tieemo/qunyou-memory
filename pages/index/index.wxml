@@ -1,0 +1,37 @@
+<view class="page index-page">
+  <view class="hero">
+    <view class="hero-cards">
+      <image class="hero-card hc-back" src="{{backImg}}" mode="aspectFill" />
+      <image class="hero-card hc-face" src="{{heroFace}}" mode="aspectFill" />
+      <image class="hero-card hc-trap" src="{{heroTrap}}" mode="aspectFill" />
+    </view>
+    <view class="title">群友卡牌</view>
+    <view class="subtitle">MEMORY · 变体记忆翻牌</view>
+  </view>
+
+  <view class="best-panel">
+    <text class="best-label">历史最高分</text>
+    <text class="best-score {{best !== null && best < 0 ? 'neg' : ''}}">{{best === null ? '--' : best}}</text>
+  </view>
+
+  <view class="section-title">选择难度</view>
+  <view class="diff-list">
+    <view class="diff-item btn" wx:for="{{diffList}}" wx:key="key" bindtap="onStart" data-key="{{item.key}}">
+      <view class="diff-head">
+        <text class="diff-name">{{item.name}}</text>
+        <text class="diff-desc">{{item.desc}}</text>
+      </view>
+      <view class="diff-trap">神人占比约 {{item.trapPercent}}%</view>
+    </view>
+  </view>
+
+  <view class="btn collection-btn" bindtap="onOpenCollection">图 鉴</view>
+
+  <view class="rules">
+    <view class="rules-title">玩法规则</view>
+    <view class="rule-line">每回合翻 2 张牌：相同好人 +1 留场；相同神人 0 分留场</view>
+    <view class="rule-line">不同好人 0 分盖回；好人 + 神人 -1 盖回；不同神人 -2 盖回</view>
+    <view class="rule-line">翻到某卡第一张后，自己 3 回合内翻到第二张配对成功 → 解锁该卡图鉴（好人、神人皆可解锁）</view>
+    <view class="rule-line">全部卡配对完游戏结束，展示总分 + 已解锁图鉴，分数可为负</view>
+  </view>
+</view>

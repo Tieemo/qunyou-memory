@@ -1,0 +1,34 @@
+<view class="page col-page">
+  <view class="col-header">
+    <view class="col-progress-wrap">
+      <text class="col-progress-num">{{unlockedCount}}</text>
+      <text class="col-progress-total">/ {{total}}</text>
+      <text class="col-progress-label">已解锁</text>
+    </view>
+    <view class="col-tip">翻到某卡第一张后，自己 3 回合内配对成功即可解锁（好人、神人均可解锁）</view>
+  </view>
+
+  <scroll-view class="col-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="col-grid">
+      <view class="col-item" wx:for="{{list}}" wx:key="id">
+        <view class="card col-card {{item.unlocked ? 'up' : ''}}">
+          <view class="card-sizer">
+            <view class="card-box">
+              <view class="card-face col-back {{item.unlocked ? '' : 'locked'}}">
+                <image src="{{backImg}}" mode="aspectFill" lazy-load="{{true}}" />
+                <view class="qmask" wx:if="{{!item.unlocked}}">
+                  <text class="qmark">?</text>
+                </view>
+              </view>
+              <view class="card-face card-front">
+                <image src="{{item.img}}" mode="aspectFill" lazy-load="{{true}}" />
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="col-name">{{item.name}}</view>
+        <view class="type-badge {{item.type}}">{{item.typeName}}</view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
